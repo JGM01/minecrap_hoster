@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Server Control</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <!-- Server Logs -->
+    <div class="bg-neutral-950 p-8">
+      <div class="relative mb-4 h-[500px]">
+        <pre id="log-container" class="h-full overflow-auto whitespace-pre-wrap font-mono text-sm text-neutral-100">
+                                                Connecting to log stream...
+                                            </pre
+        >
+      </div>
+      <!-- Command Input -->
+      <form id="command-form" class="flex space-x-2" hx-post="/api/server/command" hx-swap="none" hx-on::after-request="this.reset()">
+        <input type="text" name="command" class="flex-1 rounded-2xl border border-neutral-700 bg-neutral-900 px-4 py-2 text-neutral-100 focus:border-blue-500 focus:outline-none" placeholder="Enter server command..." autocomplete="off" />
+        <button type="submit" class="rounded-2xl bg-neutral-100 px-4 py-2 text-neutral-900 transition-colors hover:bg-neutral-400">Send</button>
+      </form>
+    </div>
+
+    <div class="p-8">
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Minecraft Server</h1>
+          <!-- Status indicator -->
+          <div class="mt-2 flex items-center space-x-2">
+            <span class="text-sm text-gray-500">Status:</span>
+            <div id="server-status">
+              <span class="rounded-full bg-gray-100 px-2 py-1 text-gray-800"> Connecting... </span>
+            </div>
+          </div>
+        </div>
+        <!-- Control buttons -->
+        <div class="flex space-x-4">
+          <button class="group flex min-w-24 flex-col items-center rounded-2xl bg-neutral-100 px-4 py-2 hover:bg-neutral-50" hx-post="/api/server/start" hx-swap="none">
+            <div class="mb-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500 transition-colors group-hover:text-green-300"><circle cx="12" cy="12" r="10" /></svg>
+            </div>
+            <span class="text-sm text-neutral-500 transition-colors group-hover:text-neutral-400">Start</span>
+          </button>
+          <button class="group flex min-w-24 flex-col items-center rounded-2xl bg-neutral-100 px-4 py-2 hover:bg-neutral-50" hx-post="/api/server/stop" hx-confirm="Are you sure you wish to stop the server process?" hx-swap="none">
+            <div class="mb-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-500 transition-colors group-hover:text-yellow-300">
+                <path d="m2 2 20 20" />
+                <path d="M8.35 2.69A10 10 0 0 1 21.3 15.65" />
+                <path d="M19.08 19.08A10 10 0 1 1 4.92 4.92" />
+              </svg>
+            </div>
+            <span class="text-sm text-neutral-500 transition-colors group-hover:text-neutral-400">Stop</span>
+          </button>
+          <button class="group flex min-w-24 flex-col items-center rounded-2xl bg-neutral-100 px-4 py-2 hover:bg-neutral-50" hx-post="/api/server/restart" hx-swap="none">
+            <div class="mb-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500 transition-colors group-hover:text-blue-300">
+                <path d="M21 2v6h-6"></path>
+                <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                <path d="M3 22v-6h6"></path>
+                <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+              </svg>
+            </div>
+            <span class="text-sm text-neutral-500 transition-colors group-hover:text-neutral-400">Restart</span>
+          </button>
+
+          <button class="group flex min-w-24 flex-col items-center rounded-2xl bg-neutral-100 px-4 py-2 hover:bg-neutral-50" hx-post="/api/server/force-stop" hx-confirm="Are you sure you wish to forcibly kill the server process?" hx-swap="none">
+            <div class="mb-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500 transition-colors group-hover:text-red-300">
+                <path d="M12 16h.01" />
+                <path d="M12 8v4" />
+                <path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z" />
+              </svg>
+            </div>
+            <span class="text-sm text-neutral-500 transition-colors group-hover:text-neutral-400">Kill</span>
+          </button>
+          <button class="group flex min-w-24 flex-col items-center rounded-2xl bg-neutral-100 px-4 py-2 hover:bg-neutral-50" id="auto-restart-toggle" hx-post="/api/server/auto-restart" hx-swap="none">
+            <div class="mb-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500 transition-colors group-hover:text-purple-300">
+                <path d="M4 12c0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8-8-3.6-8-8Z" />
+                <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+              </svg>
+            </div>
+            <span class="text-sm text-neutral-500 transition-colors group-hover:text-neutral-400">Autostart</span>
+          </button>
+
+          <button class="group flex min-w-24 flex-col items-center rounded-2xl bg-neutral-100 px-4 py-2 hover:bg-neutral-50" hx-post="/api/hoster/shutdown" hx-swap="none">
+            <div class="mb-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-neutral-500 transition-colors group-hover:text-neutral-300">
+                <path d="M18.36 6.64A9 9 0 0 1 20.77 15"></path>
+                <path d="M6.16 6.16a9 9 0 1 0 12.68 12.68"></path>
+                <path d="M12 2v4"></path>
+              </svg>
+            </div>
+            <span class="text-sm text-neutral-500 transition-colors group-hover:text-neutral-400">Shutdown</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <script>
+    // Configuration
+    const CONFIG = {
+      reconnect: {
+        initial: 1000,
+        max: 5000
+      },
+      endpoints: {
+        logs: '/api/server/logs',
+        autoRestartStatus: '/api/server/auto-restart/status'
+      }
+    };
+
+    // State
+    let logHistory = [];
+    let isFirstConnect = true;
+    let reconnectTimeout = null;
+    let currentReconnectDelay = CONFIG.reconnect.initial;
+
+    // Log handling functions
+    function appendToLogContainer(text, isReconnect = false) {
+      const logContainer = document.getElementById('log-container');
+      if (!logContainer) return;
+
+      if (isReconnect) {
+        logHistory.push('\n=== Reconnected to server ===\n');
+      }
+
+      logHistory.push(text);
+      logContainer.innerHTML = logHistory.join('');
+      logContainer.scrollTop = logContainer.scrollHeight;
+    }
+
+    // Server status handling
+    function updateServerStatus(statusHtml) {
+      const statusContainer = document.getElementById('server-status');
+      if (statusContainer) {
+        statusContainer.innerHTML = statusHtml;
+      }
+
+      updateCommandControls(statusHtml.includes('Running'));
+    }
+
+    function updateCommandControls(isRunning) {
+      const commandInput = document.querySelector('input[name="command"]');
+      const commandButton = document.querySelector('#command-form button');
+
+      if (commandInput && commandButton) {
+        commandInput.disabled = !isRunning;
+        commandButton.disabled = !isRunning;
+        toggleControlOpacity(commandInput, !isRunning);
+        toggleControlOpacity(commandButton, !isRunning);
+      }
+    }
+
+    function toggleControlOpacity(element, shouldAdd) {
+      element.classList.toggle('opacity-50', shouldAdd);
+    }
+
+    // SSE connection handling
+    function connectToLogs() {
+      const evtSource = new EventSource(CONFIG.endpoints.logs);
+
+      evtSource.addEventListener('connected', (e) => {
+        console.log('SSE Connected:', e.data);
+        currentReconnectDelay = CONFIG.reconnect.initial;
+
+        if (!isFirstConnect) {
+          appendToLogContainer('', true);
+        }
+        isFirstConnect = false;
+      });
+
+      evtSource.addEventListener('status', (e) => {
+        updateServerStatus(e.data);
+      });
+
+      evtSource.addEventListener('log', (e) => {
+        if (e.data) {
+          appendToLogContainer(e.data + '\n');
+        }
+      });
+
+      evtSource.addEventListener('heartbeat', () => {
+        // Silent heartbeat handling
+      });
+
+      evtSource.onerror = () => {
+        console.log('SSE connection lost, attempting to reconnect...');
+        evtSource.close();
+
+        if (reconnectTimeout) {
+          clearTimeout(reconnectTimeout);
+        }
+
+        reconnectTimeout = setTimeout(() => {
+          currentReconnectDelay = Math.min(currentReconnectDelay * 1.5, CONFIG.reconnect.max);
+          connectToLogs();
+        }, currentReconnectDelay);
+      };
+
+      return evtSource;
+    }
+
+    // Auto-restart handling
+    function updateAutoRestartButton(enabled) {
+      const button = document.getElementById('auto-restart-toggle');
+      const icon = button?.querySelector('svg');
+
+      if (icon) {
+        icon.classList.toggle('text-purple-600', enabled);
+        icon.classList.toggle('text-neutral-500', !enabled);
+      }
+    }
+
+    function initializeAutoRestartStatus() {
+      fetch(CONFIG.endpoints.autoRestartStatus)
+        .then(response => response.json())
+        .then(data => updateAutoRestartButton(data.enabled))
+        .catch(error => console.error('Failed to fetch auto-restart status:', error));
+    }
+
+    // Button state handling
+    function handleBeforeRequest(evt) {
+      if (evt.target.tagName === 'BUTTON') {
+        evt.target.disabled = true;
+        evt.target.classList.add('opacity-50');
+      }
+    }
+
+    function handleAfterRequest(evt) {
+      if (evt.target.tagName === 'BUTTON') {
+        evt.target.disabled = false;
+        evt.target.classList.remove('opacity-50');
+      }
+
+      // Handle auto-restart toggle response
+      if (evt.detail.elt.id === 'auto-restart-toggle') {
+        const response = JSON.parse(evt.detail.xhr.response);
+        updateAutoRestartButton(response.enabled);
+      }
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // HTMX request handlers
+      document.body.addEventListener('htmx:beforeRequest', handleBeforeRequest);
+      document.body.addEventListener('htmx:afterRequest', handleAfterRequest);
+
+      // Command input shortcut
+      const commandInput = document.querySelector('input[name="command"]');
+      commandInput?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          document.querySelector('#command-form')?.requestSubmit();
+        }
+      });
+
+      // Shutdown confirmation
+      const shutdownButton = document.querySelector('button[hx-post="/api/hoster/shutdown"]');
+      shutdownButton?.addEventListener('click', (e) => {
+        if (!confirm('Are you sure you want to shutdown the hoster? This will stop the Minecraft server if it\'s running.')) {
+          e.preventDefault();
+        }
+      });
+    }
+
+    // Initialize everything
+    function initialize() {
+      const evtSource = connectToLogs();
+      initializeAutoRestartStatus();
+      setupEventListeners();
+
+      // Cleanup on page unload
+      window.addEventListener('beforeunload', () => {
+        evtSource.close();
+        if (reconnectTimeout) {
+          clearTimeout(reconnectTimeout);
+        }
+      });
+    }
+
+    // Start the application
+    initialize();
+    </script>
+</body>
+</html>
