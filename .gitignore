@@ -1,0 +1,62 @@
+# Build directory
+build/
+
+# Binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+minecrap_hoster
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.txt
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Go specific
+*.o
+*.a
+/_obj
+/_test
+/_testmain.go
+
+# IDE directories
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# Temporary directories
+tmp/
+temp/
+
+# Log files
+*.log
+
+# Minecraft server files (if needed)
+# server.properties
+# world/
+# logs/
+# *.jar
+
+# Environment files
+.env
+.env.local
